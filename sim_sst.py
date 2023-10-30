@@ -10,18 +10,22 @@ import time
 
 import numpy as np
 from scipy.special import erf
-from caproto.server import PVGroup, SubGroup, ioc_arg_parser, pvproperty, run
+from caproto.server import PVGroup, SubGroup, ioc_arg_parser, pvproperty, run, PvpropertyDouble
 from caproto.ioc_examples.fake_motor_record import FakeMotor
+from caproto import ChannelType
 from manipulator import Manipulator, MultiMesh
+from energy import Energy
+
 
 def norm_erf(x, width=1):
     return 0.5*(erf(2.0*x/width) + 1)
+
 
 class _ADCBase(PVGroup):
     Volt = pvproperty(value=0, dtype=float, read_only=True, doc="ADC Value")
     sigma = 0.05
 
-    @Volt.scan(period=0.05)
+    @Volt.scan(period=0.5)
     async def Volt(self, instance, async_lib):
         value = await self._read()
         v = np.random.normal(value, self.sigma)
@@ -131,13 +135,6 @@ class Slit(FakeMotor):
             return (rbv - self.trans_min)/(self.trans_max - self.trans_min)
 
 
-class Energy(PVGroup):
-    mono =  SubGroup(FakeMotor, prefix="MonoMtr",  velocity=500, precision=3)
-    gap =   SubGroup(FakeMotor, prefix="GapMtr",   velocity=5000, precision=3)
-    phase = SubGroup(FakeMotor, prefix="PhaseMtr", velocity=5000, precision=3)
-    mode =  SubGroup(FakeMotor, prefix="ModeMtr",  velocity=100, precision=3)
-
-
 class Beamline(PVGroup):
     """
     A collection of detectors coupled to motors and an oscillating beam
@@ -149,7 +146,8 @@ class Beamline(PVGroup):
 
     N_per_I_per_s = 200
 
-    current = pvproperty(value=500, dtype=float, read_only=True)
+    current = pvproperty(value=500, dtype=PvpropertyDouble, read_only=True, precision=2)
+    endstation = pvproperty(value="UCAL", enum_strings=["RSoXS", "NEXAFS", "LARIAT", "LARIAT II", "UCAL", "HAXPES", "VPEEM", "pending", "conflict", "none"], record="mbbo", dtype=ChannelType.ENUM, name="Endstn-Sel")
     i0 = SubGroup(I0, doc="i0")
     i1 = SubGroup(I1, doc="i1")
     sc = SubGroup(SC, doc="sc")
@@ -159,6 +157,7 @@ class Beamline(PVGroup):
                      user_limits=(0, 10), doc="Simulated slit")
     i0upAu = SubGroup(FakeMotor, doc="i0 Up")
     tesz = SubGroup(FakeMotor, doc="tesz")
+    psh4 = SubGroup(Shutter, doc="Front End Shutter")
     psh7 = SubGroup(Shutter, doc="Simulated shutter")
     psh10 = SubGroup(Shutter, doc="Simulated shutter")
     manipulator = SubGroup(Manipulator, doc="Simulated 4-axis Manipulator")
@@ -169,13 +168,14 @@ class Beamline(PVGroup):
         super().__init__(*args, **kwargs)
         self.transmission_list = []
         self.transmission_list.append(self.eslit)
+        self.transmission_list.append(self.psh4)
         self.transmission_list.append(self.psh7)
         self.transmission_list.append(self.psh10)
 
     async def __ainit__(self, async_lib):
         await self.tesz.motor.write(40)
         await self.eslit.motor.write(40)
-        await self.energy.mono.motor.write(500)
+        await self.energy.mono.mono.motor.write(500)
         await self.energy.gap.motor.write(32000)
 
     def current_func(self):
