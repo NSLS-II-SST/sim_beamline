@@ -13,8 +13,8 @@ from scipy.special import erf
 from caproto.server import PVGroup, SubGroup, ioc_arg_parser, pvproperty, run, PvpropertyDouble
 from caproto.ioc_examples.fake_motor_record import FakeMotor
 from caproto import ChannelType
-from manipulator import Manipulator, MultiMesh
-from energy import Energy
+from .manipulator import Manipulator, MultiMesh
+from .energy import Energy
 
 
 def norm_erf(x, width=1):
@@ -203,7 +203,7 @@ class Beamline(PVGroup):
         await instance.write(value=current)
 
 
-if __name__ == "__main__":
+def start():
     ioc_options, run_options = ioc_arg_parser(
         default_prefix="SIM_SST:",
         desc=textwrap.dedent(Beamline.__doc__),
@@ -211,3 +211,7 @@ if __name__ == "__main__":
 
     ioc = Beamline(**ioc_options)
     run(ioc.pvdb, startup_hook=ioc.__ainit__, **run_options)
+
+
+if __name__ == "__main__":
+    start()
