@@ -1,8 +1,25 @@
 import asyncio
+import functools
 from caproto.server import PVGroup, SubGroup, ioc_arg_parser, pvproperty, run, PvpropertyDouble
 from caproto.ioc_examples.fake_motor_record import FakeMotor
-from caproto import ChannelType
+from caproto import ChannelType, SkipWrite
+import contextvars
 
+internal_process = contextvars.ContextVar("internal_process", default=False)
+
+
+def no_reentry(func):
+    @functools.wraps(func)
+    async def inner(*args, **kwargs):
+        if internal_process.get():
+            return
+        try:
+            internal_process.set(True)
+            return await func(*args, **kwargs)
+        finally:
+            internal_process.set(False)
+
+    return inner
 
 class MonoGrating(PVGroup):
     setpoint = pvproperty(name="_TYPE_SP", record="mbbo", value="1200l/mm",
@@ -33,8 +50,28 @@ class MonoGrating(PVGroup):
         await self.done.write(1)
 
 
+class MonoMotor(PVGroup):
+    setpoint = pvproperty(name=":ENERGY_SP", value=500)
+    readback = pvproperty(name=":ENERGY_MON", value=500,
+                          read_only=True)
+    velocity = pvproperty(name=":ENERGY_VELO", value=200)
+    done = pvproperty(name=":ERDY_STS")
+
+    def __init__(self, delay=0.1, **kwargs):
+        super().__init__(**kwargs)
+        self._delay = delay
+
+    @setpoint.putter
+    async def setpoint(self, instance, value):
+        await self.done.write(0)
+        await asyncio.sleep(self._delay)
+        await instance.write(value, verify_value=False)
+        await self.readback.write(value)
+        await self.done.write(1)
+        return SkipWrite
+
 class Mono(PVGroup):
-    mono = SubGroup(FakeMotor, prefix="",  velocity=500, precision=3)
+    mono = SubGroup(MonoMotor, prefix="")
     gratingx = SubGroup(MonoGrating, prefix="GrtX}}Mtr")
     cff = pvproperty(name=":CFF_SP", value=1.55, dtype=PvpropertyDouble)
 

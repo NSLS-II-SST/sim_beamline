@@ -148,6 +148,7 @@ class Beamline(PVGroup):
 
     current = pvproperty(value=500, dtype=PvpropertyDouble, read_only=True, precision=2)
     endstation = pvproperty(value="UCAL", enum_strings=["RSoXS", "NEXAFS", "LARIAT", "LARIAT II", "UCAL", "HAXPES", "VPEEM", "pending", "conflict", "none"], record="mbbo", dtype=ChannelType.ENUM, name="Endstn-Sel")
+    status = pvproperty(value="OK", enum_strings=["OK", "DUMPED", "FILLING"], record='mbbo', dtype=ChannelType.ENUM)
     i0 = SubGroup(I0, doc="i0")
     i1 = SubGroup(I1, doc="i1")
     sc = SubGroup(SC, doc="sc")
@@ -175,7 +176,7 @@ class Beamline(PVGroup):
     async def __ainit__(self, async_lib):
         await self.tesz.motor.write(40)
         await self.eslit.motor.write(40)
-        await self.energy.mono.mono.motor.write(500)
+        await self.energy.mono.mono.setpoint.write(400)
         await self.energy.gap.motor.write(32000)
 
     def current_func(self):
