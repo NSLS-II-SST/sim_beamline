@@ -2,8 +2,7 @@ name: Build and Push Container Image
 
 on:
   push:
-    branches:
-      - release
+    tags:
   workflow_dispatch:
 
 jobs:
@@ -14,6 +13,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Get the latest tag
+      id: get_tag
+      run: echo ::set-output name=TAG::$(git describe --tags `git rev-list --tags --max-count=1`)
+    
     - name: Authenticate to ghcr
       run: echo ${{ secrets.GHCR_PAT }} | buildah login --username cjtitus --password-stdin ghcr.io
 
@@ -21,4 +24,10 @@ jobs:
       run: bash buildah_scripts/build.sh
 
     - name: Push image
-      run: buildah push simline:latest ghcr.io/${{ github.repository }}:${{ github.ref }}
+      run: |
+        IMAGE_ID=ghcr.io/${{ github.repository }}/simline
+        # Make sure IMAGE_ID is lowercase for buildah
+        IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+
+        buildah push simline:latest $IMAGE_ID:latest
+        buildah push simline:latest $IMAGE_ID:${{ steps.get_tag.outputs.TAG }}
