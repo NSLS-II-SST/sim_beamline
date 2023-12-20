@@ -20,7 +20,7 @@ jobs:
       run: echo "LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)" >> "$GITHUB_ENV"
     
     - name: Authenticate to ghcr
-      run: echo ${{ secrets.GITHUB_TOKEN }} | buildah login --username ${{ github.actor }} --password-stdin ghcr.io
+      run: echo ${{ secrets.GHCR_PAT }} | buildah login --username cjtitus --password-stdin ghcr.io
 
     - name: Run build script
       run: bash buildah_scripts/build.sh
