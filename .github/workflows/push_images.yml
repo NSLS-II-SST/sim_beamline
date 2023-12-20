@@ -18,19 +18,20 @@ jobs:
     - name: Get the latest tag
       id: get_tag
       run: echo "LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)" >> "$GITHUB_ENV"
-    - name: Authenticate to ghcr
-      run: echo ${{ secrets.GHCR_PAT }} | buildah login --username cjtitus --password-stdin ghcr.io
+    
+    # - name: Authenticate to ghcr
+    #   run: echo ${{ secrets.GHCR_PAT }} | buildah login --username cjtitus --password-stdin ghcr.io
 
     - name: Run build script
       run: bash buildah_scripts/build.sh
 
     - name: Push image
       run: |
-        IMAGE_ID=ghcr.io/${{ github.repository }}/simline
+        IMAGE_ID=ghcr.io/${{ github.repository }}
         # Make sure IMAGE_ID is lowercase for buildah
         IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
         echo $IMAGE_ID
         echo "buildah push simline:latest $IMAGE_ID:latest"
-        buildah push simline:latest $IMAGE_ID:latest
+        buildah push --creds ${{ github.actor }}:${{ github.GITHUB_TOKEN }} simline:latest $IMAGE_ID:latest
         echo "buildah push simline:latest $IMAGE_ID:$LATEST_TAG"
         buildah push simline:latest $IMAGE_ID:$$LATEST_TAG
