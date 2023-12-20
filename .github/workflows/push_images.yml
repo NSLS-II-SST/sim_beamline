@@ -1,0 +1,23 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - release
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Run build script
+      run: bash buildah_scripts/build.sh
+
+    - name: Push image
+      run: |
+        echo ${{ secrets.GITHUB_TOKEN }} | buildah login ghcr.io --username ${{ github.actor }} --password-stdin
+        buildah push simline:latest ghcr.io/${{ github.repository }}:${{ github.ref }}
