@@ -17,8 +17,7 @@ jobs:
 
     - name: Get the latest tag
       id: get_tag
-      run: echo ::set-output name=TAG::$(git describe --tags `git rev-list --tags --max-count=1`)
-    
+      run: echo "LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)" >> "$GITHUB_ENV"
     - name: Authenticate to ghcr
       run: echo ${{ secrets.GHCR_PAT }} | buildah login --username cjtitus --password-stdin ghcr.io
 
@@ -33,5 +32,5 @@ jobs:
         echo $IMAGE_ID
         echo "buildah push simline:latest $IMAGE_ID:latest"
         buildah push simline:latest $IMAGE_ID:latest
-        echo "buildah push simline:latest $IMAGE_ID:${{ steps.get_tag.outputs.TAG }}"
-        buildah push simline:latest $IMAGE_ID:${{ steps.get_tag.outputs.TAG }}
+        echo "buildah push simline:latest $IMAGE_ID:$LATEST_TAG"
+        buildah push simline:latest $IMAGE_ID:$$LATEST_TAG
