@@ -12,6 +12,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Get the latest tag
       id: get_tag
@@ -25,9 +27,11 @@ jobs:
 
     - name: Push image
       run: |
-        IMAGE_ID=docker://ghcr.io/${{ github.repository }}/simline
+        IMAGE_ID=ghcr.io/${{ github.repository }}/simline
         # Make sure IMAGE_ID is lowercase for buildah
         IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
-
+        echo $IMAGE_ID
+        echo "buildah push simline:latest $IMAGE_ID:latest"
         buildah push simline:latest $IMAGE_ID:latest
+        echo "buildah push simline:latest $IMAGE_ID:${{ steps.get_tag.outputs.TAG }}"
         buildah push simline:latest $IMAGE_ID:${{ steps.get_tag.outputs.TAG }}
