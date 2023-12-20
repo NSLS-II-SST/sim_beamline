@@ -20,7 +20,7 @@ jobs:
       run: echo "LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)" >> "$GITHUB_ENV"
     
     - name: Authenticate to ghcr
-       run: echo ${{ secrets.GITHUB_TOKEN }} | buildah login --username ${{ github.actor }} --password-stdin ghcr.io
+      run: echo ${{ secrets.GITHUB_TOKEN }} | buildah login --username ${{ github.actor }} --password-stdin ghcr.io
 
     - name: Run build script
       run: bash buildah_scripts/build.sh
@@ -34,4 +34,4 @@ jobs:
         echo "buildah push simline:latest $IMAGE_ID:latest"
         buildah push --creds ${{ github.actor }}:${{ secrets.GITHUB_TOKEN }} simline:latest $IMAGE_ID:latest
         echo "buildah push simline:latest $IMAGE_ID:$LATEST_TAG"
-        buildah push simline:latest $IMAGE_ID:$$LATEST_TAG
+        buildah push simline:latest $IMAGE_ID:$LATEST_TAG
