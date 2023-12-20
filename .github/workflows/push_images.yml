@@ -15,7 +15,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Authenticate to ghcr
-      run: echo ${{ secrets.GITHUB_TOKEN }} | buildah login --username ${{ github.actor }} --password-stdin ghcr.io
+      run: echo ${{ secrets.GHCR_PAT }} | buildah login --username cjtitus --password-stdin ghcr.io
 
     - name: Run build script
       run: bash buildah_scripts/build.sh
