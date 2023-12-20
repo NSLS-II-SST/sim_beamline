@@ -10,6 +10,12 @@ version="0.0.1"
 
 container_package_dir=/usr/local/src
 
+# Check if bluesky:latest image is available locally
+if [[ "$(buildah images -q bluesky:latest)" == "" ]]; then
+  echo "Image not found locally. Pulling from ghcr.io/nsls-ii-sst..."
+  buildah pull ghcr.io/nsls-ii-sst/bluesky:latest
+fi
+
 container=$(buildah from bluesky:latest)
 buildah run $container -- pip3 install git+https://github.com/NSLS-II-SST/sst_funcs.git@reorganization
 buildah run $container -- pip3 install git+https://github.com/NSLS-II-SST/sst_base.git@master
