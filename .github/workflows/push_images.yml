@@ -32,6 +32,6 @@ jobs:
         IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
         echo $IMAGE_ID
         echo "buildah push simline:latest $IMAGE_ID:latest"
-        buildah push --creds ${{ github.actor }}:${{ github.GITHUB_TOKEN }} simline:latest $IMAGE_ID:latest
+        buildah push --creds ${{ github.actor }}:${{ secrets.GITHUB_TOKEN }} simline:latest $IMAGE_ID:latest
         echo "buildah push simline:latest $IMAGE_ID:$LATEST_TAG"
         buildah push simline:latest $IMAGE_ID:$$LATEST_TAG
