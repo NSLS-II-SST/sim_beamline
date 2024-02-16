@@ -15,7 +15,15 @@ from caproto.ioc_examples.fake_motor_record import FakeMotor
 from caproto import ChannelType
 from .manipulator import Manipulator, MultiMesh
 from .energy import Energy
+from os.path import join, dirname
+from scipy.interpolate import UnivariateSpline
 
+dirpath = dirname(__file__)
+print(dirpath)
+data = np.load(join(dirpath, "all_edges.npz"))
+refdata = np.load(join(dirpath, "all_ref.npz"))
+yspl = UnivariateSpline(data['x'], data['y'], s=0)
+refspl = UnivariateSpline(refdata['x'], refdata['y'], s=0)
 
 def norm_erf(x, width=1):
     return 0.5*(erf(2.0*x/width) + 1)
@@ -40,14 +48,14 @@ class I0(_ADCBase):
 
 class Ref(_ADCBase):
     async def _read(self):
-        intensity = self.parent.intensity_func()
+        intensity = self.parent.intensity_func()*refspl(self.parent.energy.mono.mono.readback.value)
         return intensity
 
 
 class SC(_ADCBase):
     async def _read(self):
         overlap = self.parent.distance_func(transmission=False)
-        intensity = self.parent.intensity_func()
+        intensity = self.parent.intensity_func()*yspl(self.parent.energy.mono.mono.readback.value)
         return intensity*overlap
 
 
@@ -180,7 +188,11 @@ class Beamline(PVGroup):
         await self.energy.gap.motor.write(32000)
 
     def current_func(self):
-        current = 500 + 25 * np.sin(time.monotonic() * (2 * np.pi) / 4)
+        t = time.monotonic()%(300)
+        if t < 270:
+            current = 500 - 50*t/270
+        else:
+            current = 500 - 50*(300 - t)/30
         return current
 
     def intensity_func(self):
