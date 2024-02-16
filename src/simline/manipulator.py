@@ -33,4 +33,4 @@ class MultiMesh(PVGroup):
     A fake 1-axis manipulator
     """
 
-    x = SubGroup(FakeMotor, velocity=10, precision=3, prefix="MMesh}}Mtr")
+    x = SubGroup(FakeMotor, velocity=10.0, precision=3, prefix="MMesh}}Mtr")

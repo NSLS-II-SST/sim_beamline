@@ -26,6 +26,6 @@ buildah run --workingdir $container_package_dir $container -- pip3 install .
 # this is the thing you want to change to spawn your IOC
 buildah config --cmd "simline --list-pvs" $container
 buildah unmount $container
-buildah commit $container simline:$version
-buildah commit $container simline:latest
+buildah commit $container sim_beamline:$version
+buildah commit $container sim_beamline:latest
 buildah rm $container

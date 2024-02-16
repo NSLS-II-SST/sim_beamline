@@ -51,10 +51,10 @@ class MonoGrating(PVGroup):
 
 
 class MonoMotor(PVGroup):
-    setpoint = pvproperty(name=":ENERGY_SP", value=500)
-    readback = pvproperty(name=":ENERGY_MON", value=500,
+    setpoint = pvproperty(name=":ENERGY_SP", value=500.0)
+    readback = pvproperty(name=":ENERGY_MON", value=500.0,
                           read_only=True)
-    velocity = pvproperty(name=":ENERGY_VELO", value=200)
+    velocity = pvproperty(name=":ENERGY_VELO", value=200.0)
     done = pvproperty(name=":ERDY_STS")
 
     def __init__(self, delay=0.1, **kwargs):
@@ -78,6 +78,6 @@ class Mono(PVGroup):
 
 class Energy(PVGroup):
     mono =  SubGroup(Mono, prefix="MonoMtr")
-    gap =   SubGroup(FakeMotor, prefix="GapMtr",   velocity=5000, precision=3)
-    phase = SubGroup(FakeMotor, prefix="PhaseMtr", velocity=5000, precision=3)
-    mode =  SubGroup(FakeMotor, prefix="ModeMtr",  velocity=100, precision=3)
+    gap =   SubGroup(FakeMotor, prefix="GapMtr",   velocity=5000.0, precision=3)
+    phase = SubGroup(FakeMotor, prefix="PhaseMtr", velocity=5000.0, precision=3)
+    mode =  SubGroup(FakeMotor, prefix="ModeMtr",  velocity=100.0, precision=3)

@@ -7,5 +7,6 @@ setup(
                       "sst_funcs", "numpy"],
     name="simline",
     packages=find_packages(),
+    package_data={'simline': ["*.npz"]},
     entry_points={'console_scripts': ['simline = simline.sim_sst:start']},
 )

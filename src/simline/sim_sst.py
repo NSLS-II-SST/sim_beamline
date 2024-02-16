@@ -154,7 +154,7 @@ class Beamline(PVGroup):
 
     N_per_I_per_s = 200
 
-    current = pvproperty(value=500, dtype=PvpropertyDouble, read_only=True, precision=2)
+    current = pvproperty(value=500.0, dtype=PvpropertyDouble, read_only=True, precision=2)
     endstation = pvproperty(value="UCAL", enum_strings=["RSoXS", "NEXAFS", "LARIAT", "LARIAT II", "UCAL", "HAXPES", "VPEEM", "pending", "conflict", "none"], record="mbbo", dtype=ChannelType.ENUM, name="Endstn-Sel")
     status = pvproperty(value="OK", enum_strings=["OK", "DUMPED", "FILLING"], record='mbbo', dtype=ChannelType.ENUM)
     i0 = SubGroup(I0, doc="i0")
