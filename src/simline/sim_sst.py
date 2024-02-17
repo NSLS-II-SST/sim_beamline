@@ -15,15 +15,10 @@ from caproto.ioc_examples.fake_motor_record import FakeMotor
 from caproto import ChannelType
 from .manipulator import Manipulator, MultiMesh
 from .energy import Energy
+from .caproto_mca import MCASIM
 from os.path import join, dirname
 from scipy.interpolate import UnivariateSpline
 
-dirpath = dirname(__file__)
-print(dirpath)
-data = np.load(join(dirpath, "all_edges.npz"))
-refdata = np.load(join(dirpath, "all_ref.npz"))
-yspl = UnivariateSpline(data['x'], data['y'], s=0)
-refspl = UnivariateSpline(refdata['x'], refdata['y'], s=0)
 
 def norm_erf(x, width=1):
     return 0.5*(erf(2.0*x/width) + 1)
@@ -48,14 +43,16 @@ class I0(_ADCBase):
 
 class Ref(_ADCBase):
     async def _read(self):
-        intensity = self.parent.intensity_func()*refspl(self.parent.energy.mono.mono.readback.value)
+        energy = self.parent.energy.mono.mono.readback.value
+        intensity = self.parent.intensity_func()*self.parent.refspl(energy)
         return intensity
 
 
 class SC(_ADCBase):
     async def _read(self):
+        energy = self.parent.energy.mono.mono.readback.value
         overlap = self.parent.distance_func(transmission=False)
-        intensity = self.parent.intensity_func()*yspl(self.parent.energy.mono.mono.readback.value)
+        intensity = self.parent.intensity_func()*self.parent.yspl(energy)
         return intensity*overlap
 
 
@@ -172,6 +169,7 @@ class Beamline(PVGroup):
     manipulator = SubGroup(Manipulator, doc="Simulated 4-axis Manipulator")
     multimesh = SubGroup(MultiMesh, doc="Simulated MultiMesh Manipulator")
     energy = SubGroup(Energy, doc="Simulated Energy Object")
+    tesmca = SubGroup(MCASIM, doc="Simulated TES MCA")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -180,6 +178,12 @@ class Beamline(PVGroup):
         self.transmission_list.append(self.psh4)
         self.transmission_list.append(self.psh7)
         self.transmission_list.append(self.psh10)
+        dirpath = dirname(__file__)
+        print(dirpath)
+        data = np.load(join(dirpath, "all_edges.npz"))
+        refdata = np.load(join(dirpath, "all_ref.npz"))
+        self.yspl = UnivariateSpline(data['x'], data['y'], s=0)
+        self.refspl = UnivariateSpline(refdata['x'], refdata['y'], s=0)
 
     async def __ainit__(self, async_lib):
         await self.tesz.motor.write(40)
