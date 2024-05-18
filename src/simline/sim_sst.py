@@ -163,6 +163,7 @@ class Beamline(PVGroup):
                      user_limits=(0, 10), doc="Simulated slit")
     i0upAu = SubGroup(FakeMotor, doc="i0 Up")
     tesz = SubGroup(FakeMotor, doc="tesz")
+    psh1 = SubGroup(Shutter, doc="Front End Shutter")
     psh4 = SubGroup(Shutter, doc="Front End Shutter")
     psh7 = SubGroup(Shutter, doc="Simulated shutter")
     psh10 = SubGroup(Shutter, doc="Simulated shutter")
